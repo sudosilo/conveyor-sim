@@ -1,6 +1,6 @@
-// Packet factory simulation. Runs in the browser on top of a replayed world. Packets are never saved: every viewer
-// runs its own copy of the factory, so the saved data stays a plain list of machines and conveyors.
-import {MACHINES} from './engine.js';
+// Packet factory simulation. A plan is a list of machines and belts. Packets are never saved: the page runs the
+// factory live from the plan, so a plan stays small enough to share in a link.
+import {MACHINES,autoRoute} from './machines.js';
 import {SAUCES,STYLES} from './packets.js';
 
 export const GAP = 1100;
@@ -15,18 +15,15 @@ export function packetLabel(p){
   return st+SAUCES[p.s][1];
 }
 
-export function buildSim(W,seed){
+export function buildSim(plan,seed){
   const R=rng(seed||7);
   const machines=new Map(),belts=[];
-  for(const c of W.chunks.values())for(const r of c.records){
-    if(r.hidden)continue;
-    if(r.kind==='machine')machines.set(nk(r.name),{r,type:r.type,M:MACHINES[r.type],q:[],out:[],hold:[],made:[],t:0,rr:0,n:{in:0,out:0,made:0,reject:0,miss:0},outs:[],ins:[],cur:null});
-  }
-  for(const c of W.chunks.values())for(const r of c.records){
-    if(r.hidden||r.kind!=='conveyor')continue;
-    const A=machines.get(nk(r.from)),B=machines.get(nk(r.to));if(!A||!B)continue;
-    const d=[0];for(let i=1;i<r.pts.length;i++)d.push(d[i-1]+Math.hypot(r.pts[i][0]-r.pts[i-1][0],r.pts[i][1]-r.pts[i-1][1],r.pts[i][2]-r.pts[i-1][2]));
-    const b={r,A,B,out:r.out||'*',v:r.speed||1500,pts:r.pts,d,L:d[d.length-1]||1,items:[]};
+  for(const r of plan.machines)machines.set(nk(r.name),{r,type:r.type,M:MACHINES[r.type],q:[],out:[],hold:[],made:[],t:0,rr:0,n:{in:0,out:0,made:0,reject:0,miss:0},outs:[],ins:[],cur:null});
+  for(const r of plan.belts){
+    const A=machines.get(nk(r.from)),B=machines.get(nk(r.to));if(!A||!B||A===B)continue;
+    const pts=r.pts||autoRoute(A.r,B.r);
+    const d=[0];for(let i=1;i<pts.length;i++)d.push(d[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1],pts[i][2]-pts[i-1][2]));
+    const b={r,A,B,out:r.out||'*',v:r.speed||1500,pts,d,L:d[d.length-1]||1,items:[]};
     belts.push(b);A.outs.push(b);B.ins.push(b);
   }
   let uid=1,pair=1;
