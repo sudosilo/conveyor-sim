@@ -18,7 +18,18 @@ export const MACHINES = {
   arm:{size:[2400,2400,3000],outs:['*'],name:'Robot Arm',web:'JavaScript. A programmable arm that runs a punch card of steps on each packet.',opts:'meta.ops list of upgrade, downgrade, flip, plain, glitter, run in turn, one per packet'},
   fabricator:{size:[4800,4200,4200],outs:[],name:'Fabricator',web:'The finished product of a site. Turns packets into one thing and shows it.',opts:'meta.product is wallpaper (gallery page), roll (feed), brick (archive or backup), receipt (dashboard) or token (login or payment)'},
   dock:{size:[6000,4800,4000],outs:[],name:'Shipping Dock',web:'Web server. Ships finished packets out to the customer.',opts:'no options'},
-  reject:{size:[2400,2400,1500],outs:[],name:'Dead Letter Bin',web:'Dead letter queue. Where refused and timed out packets pile up so someone can see what went wrong.',opts:'no options'}
+  reject:{size:[2400,2400,1500],outs:[],name:'Dead Letter Bin',web:'Dead letter queue. Where refused and timed out packets pile up so someone can see what went wrong.',opts:'no options'},
+  showroom:{size:[5400,3000,4200],outs:[],name:'Showroom',web:'Frontend. The display window the customer looks through. Finished packets end up on its shelves, the way data ends up on a page.',opts:'no options'},
+  arcade:{size:[3000,3000,3600],outs:['*'],name:'Arcade Cabinet',web:'Game engine or realtime canvas. Packets go in, bounce around inside the game, and come out glowing.',opts:'no options'},
+  register:{size:[2400,2400,2400],outs:['*'],name:'Cash Register',web:'Payments. Rings up each packet, drops a coin in the till, and passes the packet on as paid.',opts:'no options'},
+  queue:{size:[4200,4200,3000],outs:['*'],name:'Holding Hopper',web:'Job queue. A big bin that holds work and lets one packet out whenever the belt ahead has room.',opts:'no options'},
+  tube:{size:[1800,1800,3000],outs:['*'],name:'Pneumatic Tube',web:'WebSocket or live connection. Shoots packets out three times faster than a normal belt, and the line stays open.',opts:'no options'},
+  bell:{size:[1800,1800,2400],outs:['*','copy'],name:'Doorbell',web:'Webhook. Every packet that passes rings the bell, and a copy is sent to out copy for another building to hear.',opts:'no options'},
+  vending:{size:[1800,1800,3600],outs:['*','miss'],name:'Vending Machine',web:'CDN. A stocked machine near the customer that hands out packets fast. When it runs dry, packets go to out miss and travel the long way.',opts:'meta.cap 1 to 30, default 8'},
+  ticker:{size:[2400,1800,2400],outs:[],name:'Ticker Tape',web:'Monitoring and analytics. Prints every packet it receives on a running tape so someone can read what happened.',opts:'no options'},
+  ai:{size:[3000,3000,3600],outs:['*'],name:'Oracle',web:'AI model. Takes a packet in and makes a different one come out, a new sauce it was never handed.',opts:'no options'},
+  locker:{size:[4800,2400,3600],outs:['*'],name:'Cold Locker',web:'File or object storage. Holds packets in big lockers and hands them back slowly.',opts:'meta.every seconds per trip, default 4'},
+  gap:{size:[2400,2400,2400],outs:[],name:'Unbuilt Machine',web:'A part of the stack that has no machine yet. It sits in the gap row until one is designed for it.',opts:'no options'}
 };
 export const PRODUCTS = ['wallpaper','roll','brick','receipt','token'];
 export const ARM_OPS = ['upgrade','downgrade','flip','plain','glitter'];
@@ -38,6 +49,17 @@ export function machineSegs(r){
   else if(r.type==='bin'||r.type==='reject'){add(...boxSegs(-x,-y,x,y,0,h));add([-x,-y,h],[x,y,h],[-x,y,h],[x,-y,h]);}
   else if(r.type==='window'){add(...boxSegs(-x,-y,x,y,0,h));add([-x*0.5,-y-10,BELT_Z],[x*0.5,-y-10,BELT_Z],[x*0.5,-y-10,BELT_Z],[x*0.5,-y-10,BELT_Z+900],[x*0.5,-y-10,BELT_Z+900],[-x*0.5,-y-10,BELT_Z+900],[-x*0.5,-y-10,BELT_Z+900],[-x*0.5,-y-10,BELT_Z]);}
   else if(r.type==='fabricator'){add(...boxSegs(-x,-y,x,y,0,h));add([-x,-y,h*0.5],[x,-y,h*0.5],[-x,y,h*0.5],[x,y,h*0.5],[0,0,h],[0,0,h+1500],[-300,0,h+1500],[300,0,h+1500]);}
+  else if(r.type==='showroom'){add(...boxSegs(-x,-y,x,y,0,h));for(let k=1;k<4;k++){add([-x,-y-10,h*k/4],[x,-y-10,h*k/4]);add([-x+w*k/4,-y-10,0],[-x+w*k/4,-y-10,h]);}}
+  else if(r.type==='arcade'){add(...boxSegs(-x,-y*0.4,x,y,0,h));add([-x,-y,0],[-x,-y,h*0.45],[x,-y,0],[x,-y,h*0.45],[-x,-y,h*0.45],[x,-y,h*0.45],[-x,-y,h*0.45],[-x,-y*0.4,h],[x,-y,h*0.45],[x,-y*0.4,h],[-x,-y,0],[x,-y,0]);add([-x*0.6,-y*0.75,h*0.6],[x*0.6,-y*0.75,h*0.6],[x*0.6,-y*0.75,h*0.6],[x*0.6,-y*0.55,h*0.85],[x*0.6,-y*0.55,h*0.85],[-x*0.6,-y*0.55,h*0.85],[-x*0.6,-y*0.55,h*0.85],[-x*0.6,-y*0.75,h*0.6]);}
+  else if(r.type==='register'){add(...boxSegs(-x,-y,x,y,0,h*0.6));add([-x*0.5,0,h*0.6],[-x*0.5,0,h],[x*0.5,0,h*0.6],[x*0.5,0,h],[-x*0.5,0,h],[x*0.5,0,h]);}
+  else if(r.type==='queue'){add(...boxSegs(-x*0.4,-y*0.4,x*0.4,y*0.4,0,h*0.4));for(const [a,b] of [[[-x*.4,-y*.4],[-x,-y]],[[x*.4,-y*.4],[x,-y]],[[x*.4,y*.4],[x,y]],[[-x*.4,y*.4],[-x,y]]])add([a[0],a[1],h*0.4],[b[0],b[1],h]);add(...boxSegs(-x,-y,x,y,h,h));}
+  else if(r.type==='tube'){add(...vcircle(0,BELT_Z+300,x*0.5,10,-y));add([0,-y,BELT_Z+300+x*0.5],[0,y,h],[0,y,h],[0,y,BELT_Z]);add(...boxSegs(-x*0.5,-y*0.5,x*0.5,y*0.5,0,BELT_Z));}
+  else if(r.type==='bell'){add(...boxSegs(-x,-y,x,y,0,h*0.6));add(...vcircle(0,h*0.8,x*0.6,10,-y-10));}
+  else if(r.type==='vending'){add(...boxSegs(-x,-y,x,y,0,h));for(let k=1;k<5;k++)add([-x*0.8,-y-10,h*k/5],[x*0.3,-y-10,h*k/5]);add([x*0.3,-y-10,h*0.2],[x*0.3,-y-10,h*0.9]);}
+  else if(r.type==='ticker'){add(...boxSegs(-x,-y,x,y,0,h*0.7));add([0,-y,h*0.7],[0,-y-900,h*0.95],[0,-y-900,h*0.95],[0,-y-1800,h*0.6]);}
+  else if(r.type==='ai'){add(...boxSegs(-x,-y,x,y,0,h*0.7));add(...vcircle(0,h*0.85,x*0.5,12,0));add([0,0,h*0.7],[0,0,h*1.2]);}
+  else if(r.type==='locker'){add(...boxSegs(-x,-y,x,y,0,h));for(let k=1;k<4;k++)add([-x+w*k/4,-y-10,0],[-x+w*k/4,-y-10,h]);add([-x,-y-10,h/2],[x,-y-10,h/2]);}
+  else if(r.type==='gap'){add(...boxSegs(-x,-y,x,y,0,h));const q=-y-10;add([-x*0.3,q,h*0.75],[0,q,h*0.88],[0,q,h*0.88],[x*0.3,q,h*0.75],[x*0.3,q,h*0.75],[0,q,h*0.5],[0,q,h*0.5],[0,q,h*0.35],[0,q,h*0.2],[0,q,h*0.12]);}
   else{add(...boxSegs(-x,-y,x,y,0,h));add([-x,0,BELT_Z],[x,0,BELT_Z]);}
   return rot(s,r.at[0],r.at[1],r.at[2],r.rot||0);
 }
@@ -56,4 +78,4 @@ export function autoRoute(A,B){
   const p=[A.at[0],A.at[1],BELT_Z],q=[B.at[0],B.at[1],BELT_Z];
   return p[0]===q[0]||p[1]===q[1]?[p,q]:[p,[q[0],p[1],BELT_Z],q];
 }
-export const DEFAULT_COLOR={hopper:1,spacer:10,sorter:3,gate:10,rewrap:5,splitter:3,rack:6,bin:2,cabinet:0,clock:4,turnstile:6,window:0,arm:11,fabricator:4,dock:2,reject:7};
+export const DEFAULT_COLOR={hopper:1,spacer:10,sorter:3,gate:10,rewrap:5,splitter:3,rack:6,bin:2,cabinet:0,clock:4,turnstile:6,window:0,arm:11,fabricator:4,dock:2,reject:7,showroom:4,arcade:3,register:2,queue:9,tube:5,bell:11,vending:8,ticker:7,ai:6,locker:0,gap:7};
