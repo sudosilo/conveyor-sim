@@ -279,7 +279,7 @@ function renderCard(){
   if(!m){card.style.display='none';return;}
   const M=MACHINES[m.type];
   let h=`<b>${esc(m.name)}</b> <span class="muted">${esc(M.name)}</span><br>${esc(M.web)}`;
-  if(m.tool)h+=`<br><span class="muted">Stands in for ${esc(m.tool)}${m.cat?' ('+esc(m.cat)+')':''}${m.host?', runs on '+esc(m.host):''}</span>`;
+  if(m.tool)h+=`<br><span class="muted">Stands in for ${esc(m.tool)}${m.cat&&nk(m.cat)!==nk(m.tool)?' ('+esc(m.cat)+')':''}${m.detail?': '+esc(m.detail):''}${m.host?', runs on '+esc(m.host):''}</span>`;
   h+=`<br><span class="muted" id="cnt">${counts(m)}</span>`;
   if(ui.build){
     const outs=outsOf(m),feeds=plan.belts.map((b,i)=>[b,i]).filter(([b])=>nk(b.from)===nk(m.name));
@@ -317,7 +317,7 @@ function renderPanel(){
       const gaps=rep.filter(r=>!r.kind);
       h+=`<p><b>${esc(plan.title)}</b><br><span class="muted">${rep.length} tools, ${rep.length-gaps.length} shown as machines or hosts, ${gaps.length} gaps.</span></p>`;
       if(plan.hosts&&plan.hosts.length)h+='<div class="chips">'+plan.hosts.map((n,i)=>`<span class="chip" style="background:${HOST_COLORS[i%HOST_COLORS.length]};padding:3px 8px;font-size:12px">${esc(n)} floor</span>`).join('')+'</div>';
-      h+=rep.map(r=>`<div class="row"><span class="sw" style="background:${r.kind?r.type==='host'?'#fffdf7':PALETTE[DEFAULT_COLOR[r.type]]:'#ffffff'}"></span><div><b>${esc(r.name)}</b> <span class="muted">${esc(r.cat)}</span><div class="muted ${r.kind?'':'gap'}">${!r.kind?'Gap. No machine stands for this yet. It waits in the gap row.':r.type==='host'?'Host. Colors the floor under the machines it runs.':esc(MACHINES[r.type].name)+', '+esc(MACHINES[r.type].web.split('.')[0])+'.'}</div></div></div>`).join('');
+      h+=rep.map(r=>`<div class="row"><span class="sw" style="background:${r.kind?r.type==='host'?'#fffdf7':PALETTE[DEFAULT_COLOR[r.type]]:'#ffffff'}"></span><div><b>${esc(r.name)}</b> <span class="muted">${nk(r.cat)!==nk(r.name)?esc(r.cat):''}</span>${r.detail?`<div class="muted">${esc(r.detail)}</div>`:''}<div class="muted ${r.kind?'':'gap'}">${!r.kind?'Gap. No machine stands for this yet. It waits in the gap row.':r.type==='host'?'Host. Colors the floor under the machines it runs.':esc(MACHINES[r.type].name)+', '+esc(MACHINES[r.type].web.split('.')[0])+'.'}</div></div></div>`).join('');
     }else h+='<p class="muted">This factory was not built from a stack. Load one below or paste one.</p>';
     h+='<p style="padding-top:8px"><b>Example stacks</b></p>'+STACKS.map((st,i)=>`<div class="row tap" data-stack="${i}"><span class="sw"></span><div><b>${esc(st.title)}</b><div class="muted">${esc(st.about)}</div></div></div>`).join('');
     h+=`<p style="padding-top:8px"><b>Paste a stack</b><br><span class="muted">Copy the stack text from the pipeline builder, or write lines like Frontend: Next.js, Tailwind CSS</span></p><textarea id="paste" placeholder="Frontend: Next.js, Tailwind CSS"></textarea><div class="chips"><button id="buildStack">Build this stack</button></div>`;
