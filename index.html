@@ -29,8 +29,11 @@ button.sm{padding:3px 8px;font-size:12px}
 .sw{width:14px;height:14px;border-radius:3px;flex:none;margin-top:3px;border:1px solid rgba(0,0,0,.15)}
 .muted{color:var(--muted);font-size:12px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-#card{position:fixed;left:10px;right:10px;bottom:64px;max-width:440px;display:none;font-size:12px;max-height:42vh;overflow:auto}
+#card{position:fixed;left:0;top:0;width:min(300px,78vw);display:none;font-size:12px;transform-origin:50% 100%;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 #card b{font-size:13px}
+#card button{pointer-events:auto}
+#card::after{content:'';position:absolute;left:var(--ax,50%);bottom:-7px;width:12px;height:12px;margin-left:-6px;background:var(--panel);border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:rotate(45deg)}
+#card .x{float:right;margin:-2px -4px 0 6px}
 textarea{width:100%;min-height:120px;font:inherit;font-size:12px;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff;color:var(--ink)}
 .gap{color:#b4442c}
 p{margin:0 0 10px}
@@ -278,7 +281,7 @@ function renderCard(){
   const m=ui.sel&&plan.machines.find(x=>nk(x.name)===nk(ui.sel));
   if(!m){card.style.display='none';return;}
   const M=MACHINES[m.type];
-  let h=`<b>${esc(m.name)}</b> <span class="muted">${esc(M.name)}</span><br>${esc(M.web)}`;
+  let h=`<button class="sm x" data-act="close">x</button><b>${esc(m.name)}</b> <span class="muted">${esc(M.name)}</span><br>${esc(M.web)}`;
   if(m.tool)h+=`<br><span class="muted">Stands in for ${esc(m.tool)}${m.cat&&nk(m.cat)!==nk(m.tool)?' ('+esc(m.cat)+')':''}${m.detail?': '+esc(m.detail):''}${m.host?', runs on '+esc(m.host):''}</span>`;
   h+=`<br><span class="muted" id="cnt">${counts(m)}</span>`;
   if(ui.build){
@@ -289,12 +292,13 @@ function renderCard(){
     if(feeds.length)h+='<div class="chips">'+feeds.map(([b,i])=>`<button class="sm" data-unbelt="${i}">remove belt to ${esc(b.to)}${b.out&&b.out!=='*'?' ('+esc(outName(m,b.out))+')':''}</button>`).join('')+'</div>';
     h+=`<div class="chips"><button class="sm" data-act="rename">Rename</button><button class="sm" data-act="delete">Delete</button></div>`;
   }
-  card.innerHTML=h;card.style.display='block';
+  card.innerHTML=h;card.style.display='block';placeCard();
   card.querySelectorAll('[data-by]').forEach(b=>b.onclick=()=>{m.meta.by=b.dataset.by;edited();});
   card.querySelectorAll('[data-prod]').forEach(b=>b.onclick=()=>{m.meta.product=b.dataset.prod;edited();});
   card.querySelectorAll('[data-out]').forEach(b=>b.onclick=()=>{ui.connect={from:m.name,out:b.dataset.out};hint();});
   card.querySelectorAll('[data-unbelt]').forEach(b=>b.onclick=()=>{plan.belts.splice(+b.dataset.unbelt,1);edited();});
   card.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{
+    if(b.dataset.act==='close'){ui.sel=null;ui.connect=null;drawWorld();renderCard();hint();return;}
     if(b.dataset.act==='delete'){plan.machines=plan.machines.filter(x=>x!==m);plan.belts=plan.belts.filter(x=>nk(x.from)!==nk(m.name)&&nk(x.to)!==nk(m.name));ui.sel=null;edited();return;}
     const name=(prompt('New name',m.name)||'').trim().slice(0,40);
     if(!name||nk(name)===nk(m.name))return;
@@ -304,6 +308,21 @@ function renderCard(){
   });
 }
 
+// The card floats above the tapped machine and grows or shrinks with the view's zoom.
+const _cv=new THREE.Vector3();
+function placeCard(){
+  const m=ui.sel&&plan.machines.find(x=>nk(x.name)===nk(ui.sel));
+  if(!m||card.style.display==='none')return;
+  const h=MACHINES[m.type].size[2];
+  _cv.set(...toV([m.at[0],m.at[1],h+2600])).project(camera);
+  const sx=(_cv.x+1)/2*innerWidth,sy=(1-_cv.y)/2*innerHeight;
+  const k=Math.max(0.35,Math.min(2.4,camera.zoom));
+  // Keep the card on screen; the arrow slides so it still points at the machine.
+  const vw=card.offsetWidth*k,cx=Math.max(4+vw/2,Math.min(innerWidth-4-vw/2,sx));
+  card.style.setProperty('--ax',Math.max(14,Math.min(card.offsetWidth-14,card.offsetWidth/2+(sx-cx)/k)).toFixed(1)+'px');
+  card.style.transform=`translate(${(cx-card.offsetWidth/2).toFixed(1)}px,${(sy-card.offsetHeight-8).toFixed(1)}px) scale(${k.toFixed(3)})`;
+  card.style.visibility=(sx<-200||sx>innerWidth+200||sy<-40||sy>innerHeight+400)?'hidden':'visible';
+}
 const body=document.getElementById('body'),sheet=document.getElementById('sheet');
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ui.tab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));sheet.classList.remove('closed');renderPanel();});
 document.getElementById('bSheet').onclick=()=>sheet.classList.toggle('closed');
@@ -352,7 +371,7 @@ let last=performance.now(),frame=0;
 function loop(){
   requestAnimationFrame(loop);
   const now=performance.now(),dt=(now-last)/1000;last=now;
-  controls.update();sim.step(dt);drawPackets();
+  controls.update();sim.step(dt);drawPackets();placeCard();
   if(++frame%30===0){const c=document.getElementById('cnt'),m=ui.sel&&plan.machines.find(x=>nk(x.name)===nk(ui.sel));if(c&&m)c.innerHTML=counts(m);if(ui.tab==='live'&&!sheet.classList.contains('closed'))renderPanel();}
   renderer.render(scene,camera);
 }
