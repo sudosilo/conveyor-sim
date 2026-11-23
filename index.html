@@ -316,7 +316,8 @@ function placeCard(){
   const h=MACHINES[m.type].size[2];
   _cv.set(...toV([m.at[0],m.at[1],h+2600])).project(camera);
   const sx=(_cv.x+1)/2*innerWidth,sy=(1-_cv.y)/2*innerHeight;
-  const k=Math.max(0.35,Math.min(2.4,camera.zoom));
+  // Follows zoom, but never grows past a readable size or past 90 percent of the screen width or 30 percent of its height.
+  const k=Math.max(0.35,Math.min(1.15,camera.zoom,innerWidth*0.9/card.offsetWidth,innerHeight*0.3/card.offsetHeight));
   // Keep the card on screen; the arrow slides so it still points at the machine.
   const vw=card.offsetWidth*k,cx=Math.max(4+vw/2,Math.min(innerWidth-4-vw/2,sx));
   card.style.setProperty('--ax',Math.max(14,Math.min(card.offsetWidth-14,card.offsetWidth/2+(sx-cx)/k)).toFixed(1)+'px');
