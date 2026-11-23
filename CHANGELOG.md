@@ -1,5 +1,7 @@
 Conveyor Sim changelog
 
+2026-11-23. Every label now leads with what the machine is in software, like Web server, Database or Cron job, and the factory picture comes second as "shown as Shipping Dock". This covers the floor labels, the machine card, the Machines, Live and Stack tabs, and the build hints. Machines built from a stack lead with the tool name, like React, then its role.
+
 2026-11-22. The machine card stops growing past a readable size when you zoom in, and never covers more than 90 percent of the screen width or 30 percent of its height.
 
 2026-11-22. The machine info card now pops up above the tapped machine instead of at the bottom of the screen. It grows and shrinks with your zoom, stays on screen with its arrow pointing at the machine, and closes with its x or a tap on open floor.
